@@ -1,0 +1,23 @@
+{
+  "name": "node-red-contrib-homeseer",
+  "version": "1.0.0",
+  "description": "HomeSeer node to control HomeSeer devices and features from Node-RED",
+  "main": "index.js",
+  "keywords": [
+	"node-red",
+    "homeseer",
+    "hs4"
+  ],
+  "author": "HomeSeer Technologies",
+  "license": "",
+  "node-red": {
+    "nodes": {
+	  "hs-server": "homeseer/hs-server.js",
+      "hs-device": "homeseer/hs-device.js"
+    }
+  },
+  "dependencies": {
+    "promise": "^8.0.3",
+    "axios": "*"
+  }
+}
