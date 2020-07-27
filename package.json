@@ -13,7 +13,8 @@
   "node-red": {
     "nodes": {
 	  "hs-server": "homeseer/hs-server.js",
-      "hs-device": "homeseer/hs-device.js"
+      "hs-device": "homeseer/hs-device.js",
+	  "hs-event": "homeseer/hs-event.js"
     }
   },
   "dependencies": {

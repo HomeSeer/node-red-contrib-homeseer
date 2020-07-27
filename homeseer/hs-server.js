@@ -1,9 +1,10 @@
 const Promise = require('promise');
 const Axios = require('axios');
+const Events = require('events');
 
 module.exports = function(RED) {
 	
-	var servers = {};
+	var servers = [];
 	
 	function HsServerNode(config) {
         var node = this;
@@ -13,6 +14,8 @@ module.exports = function(RED) {
 		node.host = config.host;
 		node.port = config.port;
 		node.allDevices = [];
+		node.allEvents = [];
+		node.eventEmitter = new Events.EventEmitter();
 		
 		node.getEndpoint = function() {
             return this.host + ':' + this.port;
@@ -22,6 +25,16 @@ module.exports = function(RED) {
 			console.log("getAllDevices");
 			Axios.get('http://' + node.getEndpoint() + '/json?request=getstatus', {}).then( (response) => {
 				node.allDevices = response.data.Devices;
+			}).catch( err => {
+				console.log("NODE ERROR");
+				console.log(err.message);
+			});
+		};
+		
+		node.getAllEvents = function() {
+			console.log("getAllEvents");
+			Axios.get('http://' + node.getEndpoint() + '/json?request=getevents', {}).then( (response) => {
+				node.allEvents = response.data.Events;
 			}).catch( err => {
 				console.log("NODE ERROR");
 				console.log(err.message);
@@ -50,8 +63,20 @@ module.exports = function(RED) {
 			});
 		};
 		
+		node.runEvent = function(eventId) {
+			console.log("runEvent id=" + eventId);
+			return new Promise( (resolve, reject) => {
+				Axios.get('http://' + node.getEndpoint() + '/json?request=runevent&id='+ eventId, {}).then( (response) => {
+					resolve(response.data);
+				}).catch( err => {
+					reject(err);
+				});
+			});
+		};
+		
 		node.getAllDevices();
-		servers[node.getEndpoint()] = node;
+		node.getAllEvents();
+		servers.push(node);
     }
     RED.nodes.registerType("hs-server",HsServerNode);
 	
@@ -66,8 +91,7 @@ module.exports = function(RED) {
 	    }
 		else
 		{
-			const endpoint = req.query.host + ':' + req.query.port;
-			const server = servers[endpoint];
+			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
 			
 			if(server){
 				if(req.query.forceRefresh === 'true'){
@@ -76,7 +100,7 @@ module.exports = function(RED) {
 				const rootDevices = server.allDevices.filter(device => (device.relationship == 0 || device.relationship == 2 || device.relationship == 3));
 				res.status(200).send(rootDevices);
 			} else {
-				res.status(404).send("Unknown HS Server: " + endpoint);
+				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
 			}
 		}
 	});
@@ -95,8 +119,7 @@ module.exports = function(RED) {
 	    }
 		else
 		{
-			const endpoint = req.query.host + ':' + req.query.port;
-			const server = servers[endpoint];
+			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
 			
 			if(server){
 				const rootDevice = server.allDevices.find(device => device.ref == req.query.deviceref);
@@ -107,10 +130,57 @@ module.exports = function(RED) {
 					res.status(500).send("Unknown Device: " + req.query.deviceref);
 				}
 			} else {
-				res.status(404).send("Unknown HS Server: " + endpoint);
+				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
 			}
 		}
 	});
+	
+	// Get Events
+	RED.httpAdmin.get('/homeseer/events', function(req, res) {
+		console.log("Http request: events ");
+		if(!req.query.host) {
+			return res.status(500).send("Missing HS Server Host");
+	    }
+		else if(!req.query.port) {
+			return res.status(500).send("Missing HS Server Port");
+	    }
+		else
+		{
+			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
+			
+			if(server){
+				if(req.query.forceRefresh === 'true'){
+					server.getAllEvents();
+				}
+				res.status(200).send(server.allEvents);
+			} else {
+				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
+			}
+		}
+	});
+	
+	// Receive updates from homeseer
+	RED.httpAdmin.post('/homeseer/webhook', function(req,res){
+        console.log("Http request: HomeSeer Webhook");
+        console.log(req.body);
+
+		var server;
+		if(servers.length == 1) {
+			//if there is only one server defined, use that one
+			server = servers[0];
+		} else if (servers.length > 1) {
+			// if there is multiple servers, use the first one with the correct ip
+			server = servers.find(s => s.host == req.ip);
+		}
+		
+		if(server) {
+			if(req.body["ref"]) {
+				server.eventEmitter.emit(req.body["ref"], req.body);
+			}
+		}
+
+        res.status(200).send("OK");
+    });
 	
 	
 }

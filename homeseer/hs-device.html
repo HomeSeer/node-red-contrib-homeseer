@@ -40,6 +40,7 @@
         },
         inputs:1,
         outputs:1,
+		align: 'right',
         icon: "hs-device.png",
 		paletteLabel: function() {
             return "HS Device";
@@ -172,8 +173,6 @@
 			//this.feature will still bet set to the last feature value
             this.device = $('#node-input-device').val() || 0;
 			this.feature = $('#node-input-feature').val() || 0;
-			console.log('device=' + this.device);
-			console.log('feature=' + this.feature);
         }
     });
 </script>

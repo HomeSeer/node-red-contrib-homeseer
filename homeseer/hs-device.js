@@ -5,31 +5,48 @@ module.exports = function(RED) {
 		console.log("HsDeviceNode");
         console.log(config);
         RED.nodes.createNode(node,config);
-		// Retrieve the config node
+		// Retrieve the server node
         node.server = RED.nodes.getNode(config.server);
-		
+		node.ref = (config.feature > 0 ? config.feature : config.device);
         
         node.on('input', function(msg) {
 			//console.log(node);
 			if(typeof msg.payload != 'undefined') {
-				const ref = (config.feature > 0 ? config.feature : config.device);
 				if(typeof msg.payload.value != 'undefined') {
-					node.server.controlDeviceByValue(ref, msg.payload.value).then( data => {
-						msg.payload = data;
+					node.server.controlDeviceByValue(node.ref, msg.payload.value).then( data => {
+						msg.payload = data.Devices[0];
+						node.send(msg);
 					}).catch(err => {
 						msg.payload = err;
+						node.send(msg);
 					});
-					node.send(msg);
 				} else if(typeof msg.payload.status != 'undefined') {
-					node.server.controlDeviceByLabel(ref, msg.payload.status).then( data => {
-						msg.payload = data;
+					node.server.controlDeviceByLabel(node.ref, msg.payload.status).then( data => {
+						msg.payload = data.Devices[0];
+						node.send(msg);
 					}).catch(err => {
 						msg.payload = err;
+						node.send(msg);
 					});
-					node.send(msg);
 				}
 			}
         });
+		
+		node.server.eventEmitter.on(node.ref, function(update){
+			console.log("device update:");
+			console.log(update);
+			node.status({fill: "yellow", shape: "dot", text: update.status});
+			let msg = {
+                topic: "",
+                payload: update
+            };
+			node.send(msg);
+		});
+		
+		node.on('close', function()
+		{
+			node.server.eventEmitter.on(node.ref);
+		});
 		
     }
     RED.nodes.registerType("hs-device",HsDeviceNode);

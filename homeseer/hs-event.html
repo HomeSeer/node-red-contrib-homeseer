@@ -1,0 +1,115 @@
+<script type="text/html" data-template-name="hs-event">
+    <div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+	<div class="form-row">
+        <label for="node-input-server"><i class="fa fa-server"></i> HS Server</label>
+        <input type="text" id="node-input-server">
+    </div>
+	<div class="form-row">
+        <label for="node-input-event"><i class="fa fa-lightbulb-o"></i> Event</label>
+		<div style="display: inline-block; position: relative; width: 70%; height: 20px;">
+            <div style="position: absolute; left: 0px; right: 40px;">
+				<select id="node-input-event" style="width: 100%;"></select>
+            </div>
+            <a id="node-input-eventrefresh" class="editor-button" style="position: absolute; right: 0px; top: 0px;">
+                <i class="fa fa-refresh"></i>
+            </a>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" data-help-name="hs-event">
+    <p>Node to control a HomeSeer event</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('hs-event',{
+        category: 'HomeSeer',
+        color: '#90c9ee',
+        defaults: {
+            name: {value:""},
+			event: {value:"", required: true},
+			server: {value:"", type:"hs-server", required: true},
+        },
+        inputs:1,
+        outputs:1,
+		align: 'right',
+        icon: "hs-device.png",
+		paletteLabel: function() {
+            return "HS Event";
+        },
+        label: function() {
+            return this.name||"HS Event";
+        },
+		
+		oneditprepare: function() {
+            var config = RED.nodes.node($('#node-input-server').val());
+			var node = this;
+			
+			loadEvents(node.event);
+			
+			function loadEvents(currentEvent, forceRefreshFromServer = false){
+                if (config && config.host && config.port) {
+                    $('#node-input-event').attr("disabled", "disabled")
+                    $('#node-input-event').append("<option value='' selected>Loading events...</option>")
+                    						
+					$.get('homeseer/events', { host: config.host, port: config.port, forceRefresh: forceRefreshFromServer } )
+					.done(function(data) {
+						//console.log(data);
+						const events = data;
+						
+						$('#node-input-event').empty();
+						if(events.length <= 0){
+							RED.notify("No events found", "error");
+						} else{
+							events.forEach(function(event)
+							{
+								$('#node-input-event').append('<option value="' + event.id + '">' + event.Group + ' - ' + event.Name + '</option>');
+							});
+							$('#node-input-event').removeAttr("disabled");
+							$('#node-input-event').val(currentEvent);
+						}                    
+					})
+					.fail(function()
+					{
+						RED.notify("Fail to get device list.", "error");
+					});	
+                } 
+			}
+			
+			function updateName(){
+                const eventName = $('#node-input-event option:selected').text();
+				if(eventName.length > 0){
+					$('#node-input-name').val(eventName);
+                }
+			}
+			
+			$('#node-input-eventrefresh').click( function() {
+                console.log('event refresh');
+				loadEvents(node.event, true);
+            });
+			
+			$('#node-input-server').on('change', function() {
+				console.log('server changed: ' + this.value);
+				
+				if(!config || this.value != config.id) {
+					config = RED.nodes.node(this.value);
+					if (this.value != '_ADD_') {
+						loadEvents(0);
+					} else {
+						$('#node-input-event').empty();
+					}
+				}
+            });
+			
+			$('#node-input-event').on('change', function() {
+				console.log('event changed: ' + this.value);
+				if(this.value) {
+					updateName();
+				}
+            });
+		},
+    });
+</script>
