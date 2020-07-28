@@ -4,7 +4,7 @@
         <input type="text" id="node-config-input-name" placeholder="Name">
     </div>
 	<div class="form-row">
-        <label for="node-config-input-host"><i class="fa fa-server"></i> Host</label>
+        <label for="node-config-input-host"><i class="fa fa-server"></i> IP Address</label>
         <input type="text" id="node-config-input-host">
     </div>
 	<div class="form-row">
@@ -13,19 +13,29 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="hs-server">
-    <p>Node to configure a HomeSeer Server</p>
-</script>
-
 <script type="text/javascript">
     RED.nodes.registerType('hs-server',{
         category: 'config',
         defaults: {
+			name: {value:""},
             host: {value:"localhost",required:true},
             port: {value:80,required:true,validate:RED.validators.number()}
         },
         label: function() {
-            return this.host+":"+this.port;
+            return (this.name? this.name : this.host+":"+this.port);
         }
     });
+</script>
+
+<script type="text/html" data-help-name="hs-server">
+    <p>Node to configure a HomeSeer Server</p>
+	
+	<h3>Name</h3>
+    <p>Type in a name for your HomeSeer server, if you leave this field blank then the IP Address and Port will be used as the name.</p>
+	
+	 <h3>IP Address</h3>
+    <p>Type in the IP address of your HomeSeer system. (A static IP configuration of HomeSeer is recommended)</p>
+	
+	<h3>Port</h3>
+    <p>Type in the web server port of your HomeSeer system. The default value (80) should be ok unless you changed the port in HomeSeer Setup > Network > Web Server Settings</p>
 </script>

@@ -20,10 +20,6 @@
     </div>
 </script>
 
-<script type="text/html" data-help-name="hs-event">
-    <p>Node to control a HomeSeer event</p>
-</script>
-
 <script type="text/javascript">
     RED.nodes.registerType('hs-event',{
         category: 'HomeSeer',
@@ -112,4 +108,23 @@
             });
 		},
     });
+</script>
+
+<script type="text/html" data-help-name="hs-event">
+    <p>Node representing a HomeSeer event</p>
+	
+	<h3>Setup</h3>
+    <p>Select a preconfigured HomeSeer server or add one. Select an event from the list. Hit the refresh button if you want to refresh the list of events retrieved from your HomeSeer system. Optionnaly, change the name of the node.</p>
+	
+	<h3>Input</h3>
+	<dl class="message-properties">
+		<dt class="optional">msg.topic <span class="property-type">string</span></dt>
+		<dd>a value of <code>run</code> will run the event actions in HomeSeer</dd>
+	</dl>
+	
+	<h3>Output</h3>
+	<dl class="message-properties">
+		<dt class="optional">msg.payload <span class="property-type">object</span></dt>
+		<dd>output the result of running the event, either ok or an error</dd>
+	</dl>
 </script>

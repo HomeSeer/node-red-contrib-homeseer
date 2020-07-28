@@ -45,7 +45,12 @@ module.exports = function(RED) {
 			console.log("controlDeviceByValue");
 			return new Promise( (resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=controldevicebyvalue&ref='+ deviceRef +'&value=' + value, {}).then( (response) => {
-					resolve(response.data);
+					if(response.data.Devices && response.data.Devices.length == 1){
+						resolve(response.data.Devices[0]);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
 				}).catch( err => {
 					reject(err);
 				});
@@ -56,7 +61,12 @@ module.exports = function(RED) {
 			console.log("controlDeviceByLabel");
 			return new Promise( (resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=controldevicebylabel&ref='+ deviceRef +'&label=' + label, {}).then( (response) => {
-					resolve(response.data);
+					if(response.data.Devices && response.data.Devices.length == 1){
+						resolve(response.data.Devices[0]);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
 				}).catch( err => {
 					reject(err);
 				});
@@ -68,6 +78,22 @@ module.exports = function(RED) {
 			return new Promise( (resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=runevent&id='+ eventId, {}).then( (response) => {
 					resolve(response.data);
+				}).catch( err => {
+					reject(err);
+				});
+			});
+		};
+		
+		node.getDeviceStatus = function(deviceRef) {
+			console.log("getDeviceStatus ref=" + deviceRef);
+			return new Promise( (resolve, reject) => {
+				Axios.get('http://' + node.getEndpoint() + '/json?request=getstatus&ref='+ deviceRef, {}).then( (response) => {
+					if(response.data.Devices && response.data.Devices.length == 1){
+						resolve(response.data.Devices[0]);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
 				}).catch( err => {
 					reject(err);
 				});
@@ -181,6 +207,5 @@ module.exports = function(RED) {
 
         res.status(200).send("OK");
     });
-	
 	
 }
