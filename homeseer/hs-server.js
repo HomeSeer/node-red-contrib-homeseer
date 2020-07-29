@@ -200,8 +200,10 @@ module.exports = function(RED) {
 		}
 		
 		if(server) {
-			if(req.body["ref"]) {
-				server.eventEmitter.emit(req.body["ref"], req.body);
+			if(req.body.type == "devicechange") {
+				if(req.body.data["ref"]) {
+					server.eventEmitter.emit(req.body.data["ref"], req.body.data);
+				}
 			}
 		}
 
