@@ -43,4 +43,4 @@ Every time the device value or status changes in HomeSeer the node will send to 
 ### HS Event
 Node representing a HomeSeer Event. To run the event actions, this node needs to receive on its input, a message with the `msg.topic` property set to `run`
 
-![HS Event](images/hs-device_flow.png)
+![HS Event](images/hs-event_flow.png)
