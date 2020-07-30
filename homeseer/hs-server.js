@@ -103,6 +103,13 @@ module.exports = function(RED) {
 		node.getAllDevices();
 		node.getAllEvents();
 		servers.push(node);
+		
+		node.on('close', function()
+		{
+			console.log("server close");
+			//remove the server from the server array
+			servers = servers.filter(s => s.id != node.id);
+		});
     }
     RED.nodes.registerType("hs-server",HsServerNode);
 	
@@ -196,15 +203,21 @@ module.exports = function(RED) {
 			server = servers[0];
 		} else if (servers.length > 1) {
 			// if there is multiple servers, use the first one with the correct ip
+			// FIXME: it doesn't work if homeseer and node-red run on the same machine: 	
+			// req.ip = 127.0.0.1 but s.host can be 192.168.1.xxx
+			console.log(req.ip);
 			server = servers.find(s => s.host == req.ip);
 		}
 		
 		if(server) {
 			if(req.body.type == "devicechange") {
 				if(req.body.data["ref"]) {
-					server.eventEmitter.emit(req.body.data["ref"], req.body.data);
+					server.eventEmitter.emit(req.body.data["ref"].toString(), req.body.data);
 				}
 			}
+		} else {
+			console.log("no server found");
+			console.log(servers);
 		}
 
         res.status(200).send("OK");

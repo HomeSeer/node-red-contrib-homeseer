@@ -39,7 +39,7 @@ module.exports = function(RED) {
 			}
         });
 		
-		node.server.eventEmitter.on(node.ref, function(update){
+		node.updateListener = function(update){
 			console.log("device update:");
 			console.log(update);
 			node.status({fill: "yellow", shape: "dot", text: update.status});
@@ -48,11 +48,14 @@ module.exports = function(RED) {
                 payload: update
             };
 			node.send(msg);
-		});
+		}
+		
+		node.server.eventEmitter.addListener(node.ref.toString(), node.updateListener);
 		
 		node.on('close', function()
 		{
-			node.server.eventEmitter.on(node.ref);
+			console.log("device close");
+			node.server.eventEmitter.removeListener(node.ref.toString(), node.updateListener);
 		});
 		
     }

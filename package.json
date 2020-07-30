@@ -4,17 +4,17 @@
   "description": "HomeSeer nodes to control HomeSeer devices and events from Node-RED",
   "main": "index.js",
   "keywords": [
-	"node-red",
+    "node-red",
     "homeseer",
     "hs4"
   ],
   "author": "HomeSeer Technologies",
-  "license": "AGPL v3",
+  "license": "AGPL-3.0-only",
   "node-red": {
     "nodes": {
-	  "hs-server": "homeseer/hs-server.js",
+      "hs-server": "homeseer/hs-server.js",
       "hs-device": "homeseer/hs-device.js",
-	  "hs-event": "homeseer/hs-event.js"
+      "hs-event": "homeseer/hs-event.js"
     }
   },
   "dependencies": {
