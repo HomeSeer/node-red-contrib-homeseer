@@ -26,8 +26,7 @@ module.exports = function(RED) {
 			Axios.get('http://' + node.getEndpoint() + '/json?request=getstatus', {}).then( (response) => {
 				node.allDevices = response.data.Devices;
 			}).catch( err => {
-				console.log("NODE ERROR");
-				console.log(err.message);
+				node.error(err.message);
 			});
 		};
 		
@@ -36,8 +35,7 @@ module.exports = function(RED) {
 			Axios.get('http://' + node.getEndpoint() + '/json?request=getevents', {}).then( (response) => {
 				node.allEvents = response.data.Events;
 			}).catch( err => {
-				console.log("NODE ERROR");
-				console.log(err.message);
+				node.error(err.message);
 			});
 		};
 		
@@ -115,7 +113,7 @@ module.exports = function(RED) {
 	
 	// Get Root Devices
 	RED.httpAdmin.get('/homeseer/devices', function(req, res) {
-		console.log("Http request: devices ");
+		//console.log("Http request: devices ");
 		if(!req.query.host) {
 			return res.status(500).send("Missing HS Server Host");
 	    }
@@ -140,7 +138,7 @@ module.exports = function(RED) {
 	
 	// Get Features for one root device
 	RED.httpAdmin.get('/homeseer/features', function(req, res) {
-		console.log("Http request: features ");
+		//console.log("Http request: features ");
 		if(!req.query.host) {
 			return res.status(500).send("Missing HS Server Host");
 	    }
@@ -170,7 +168,7 @@ module.exports = function(RED) {
 	
 	// Get Events
 	RED.httpAdmin.get('/homeseer/events', function(req, res) {
-		console.log("Http request: events ");
+		//console.log("Http request: events ");
 		if(!req.query.host) {
 			return res.status(500).send("Missing HS Server Host");
 	    }
@@ -194,8 +192,8 @@ module.exports = function(RED) {
 	
 	// Receive updates from homeseer
 	RED.httpAdmin.post('/homeseer/webhook', function(req,res){
-        console.log("Http request: HomeSeer Webhook");
-        console.log(req.body);
+        //console.log("Http request: HomeSeer Webhook");
+        //console.log(req.body);
 
 		var server;
 		if(servers.length == 1) {
@@ -205,7 +203,6 @@ module.exports = function(RED) {
 			// if there is multiple servers, use the first one with the correct ip
 			// FIXME: it doesn't work if homeseer and node-red run on the same machine: 	
 			// req.ip = 127.0.0.1 but s.host can be 192.168.1.xxx
-			console.log(req.ip);
 			server = servers.find(s => s.host == req.ip);
 		}
 		
@@ -216,8 +213,8 @@ module.exports = function(RED) {
 				}
 			}
 		} else {
-			console.log("no server found");
-			console.log(servers);
+			//console.log("no server found");
+			//console.log(servers);
 		}
 
         res.status(200).send("OK");
