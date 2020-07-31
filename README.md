@@ -1,14 +1,20 @@
 # HomeSeer Nodes for Node-RED
 
-This software provide Node-RED nodes to control and monitor your HomeSeer devices and events. It is compatible with **HomeSeer version 4.1.3.0 or later**.
+This software provides Node-RED nodes to control and monitor your HomeSeer devices and events. It is compatible with **HomeSeer version 4.1.3.0 or later**.
 
 ## Installation
 
+### From Node-RED (preferred)
+Go to Menu > Manage Palette > Install tab, search for **node-red-contrib-homeseer** then click the install button.
+
+### From the command line
 Use the following command from within your user data directory (by default, `$HOME/.node-red`):
 ```
 npm install node-red-contrib-homeseer
 ```
-Then restart Node-RED, the new HomeSeer nodes will appear in the palette:
+Then restart Node-RED
+
+If the installation is successful, the new HomeSeer nodes will appear in the palette:
 
 ![HomeSeer Nodes](images/hs_nodes.png)
 
