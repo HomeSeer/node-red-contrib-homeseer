@@ -18,26 +18,24 @@ module.exports = function(RED) {
 		node.eventEmitter = new Events.EventEmitter();
 		
 		node.getEndpoint = function() {
-            return this.host + ':' + this.port;
+            return node.host + ':' + node.port;
         },
 		
-		node.getAllDevices = function() {
-			console.log("getAllDevices");
-			Axios.get('http://' + node.getEndpoint() + '/json?request=getstatus', {}).then( (response) => {
-				node.allDevices = response.data.Devices;
-			}).catch( err => {
-				node.error(err.message);
+		node.refreshAllDevices = function(){
+			return getAllDevices(node.getEndpoint()).then( data => {
+				node.allDevices = data;
+			}).catch(err => {
+				node.error(msg);
 			});
-		};
+		}
 		
-		node.getAllEvents = function() {
-			console.log("getAllEvents");
-			Axios.get('http://' + node.getEndpoint() + '/json?request=getevents', {}).then( (response) => {
-				node.allEvents = response.data.Events;
-			}).catch( err => {
-				node.error(err.message);
+		node.refreshAllEvents = function(){
+			return getAllEvents(node.getEndpoint()).then( data => {
+				node.allEvents = data;
+			}).catch(err => {
+				node.error(msg);
 			});
-		};
+		}
 		
 		node.controlDeviceByValue = function(deviceRef, value) {
 			console.log("controlDeviceByValue");
@@ -98,8 +96,8 @@ module.exports = function(RED) {
 			});
 		};
 		
-		node.getAllDevices();
-		node.getAllEvents();
+		node.refreshAllDevices();
+		node.refreshAllEvents();
 		servers.push(node);
 		
 		node.on('close', function()
@@ -111,81 +109,128 @@ module.exports = function(RED) {
     }
     RED.nodes.registerType("hs-server",HsServerNode);
 	
+	function getAllDevices(endpoint) {
+		console.log("getAllDevices from " + endpoint);
+		return new Promise( (resolve, reject) => {
+			Axios.get('http://' + endpoint + '/json?request=getstatus', {}).then( (response) => {
+				resolve(response.data.Devices);
+			}).catch( err => {
+				reject(err.message);
+			});
+		});
+	}
+	
+	function getAllEvents(endpoint) {
+		console.log("getAllEvents from "  + endpoint);
+		return new Promise( (resolve, reject) => {
+			Axios.get('http://' + endpoint + '/json?request=getevents', {}).then( (response) => {
+				resolve(response.data.Events);
+			}).catch( err => {
+				reject(err.message);
+			});
+		});
+	};
+	
 	// Get Root Devices
-	RED.httpAdmin.get('/homeseer/devices', function(req, res) {
-		//console.log("Http request: devices ");
+	RED.httpAdmin.get('/homeseer/devices', async function(req, res) {
+		console.log("Http request: devices ");
 		if(!req.query.host) {
-			return res.status(500).send("Missing HS Server Host");
+			res.status(500).send("Missing HS Server Host");
 	    }
 		else if(!req.query.port) {
-			return res.status(500).send("Missing HS Server Port");
+			res.status(500).send("Missing HS Server Port");
 	    }
 		else
 		{
-			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
-			
-			if(server){
-				if(req.query.forceRefresh === 'true'){
-					server.getAllDevices();
+			try{
+				let allDevices = [];
+				const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
+				
+				if(server){
+					if(req.query.forceRefresh === 'true'){
+						await server.refreshAllDevices();
+					}
+					allDevices = server.allDevices;
+				} else {
+					// we need this for when the server node is not deployed yet
+					allDevices = await getAllDevices(req.query.host + ':' + req.query.port);
 				}
-				const rootDevices = server.allDevices.filter(device => (device.relationship == 0 || device.relationship == 2 || device.relationship == 3));
+				const rootDevices = allDevices.filter(device => (device.relationship == 0 || device.relationship == 2 || device.relationship == 3));
 				res.status(200).send(rootDevices);
-			} else {
-				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
+			} catch (err) {
+				res.status(500).send(err.message);
 			}
 		}
 	});
 	
 	// Get Features for one root device
-	RED.httpAdmin.get('/homeseer/features', function(req, res) {
-		//console.log("Http request: features ");
+	RED.httpAdmin.get('/homeseer/features', async function(req, res) {
+		console.log("Http request: features ");
 		if(!req.query.host) {
-			return res.status(500).send("Missing HS Server Host");
+			res.status(500).send("Missing HS Server Host");
 	    }
 		else if(!req.query.port) {
-			return res.status(500).send("Missing HS Server Port");
+			res.status(500).send("Missing HS Server Port");
 	    }
 		else if(!req.query.deviceref) {
-			return res.status(500).send("Missing Device Ref#");
+			res.status(500).send("Missing Device Ref#");
 	    }
 		else
 		{
-			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
-			
-			if(server){
-				const rootDevice = server.allDevices.find(device => device.ref == req.query.deviceref);
+			try{
+				let allDevices = [];
+				const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
+				
+				if(server){
+					if(req.query.forceRefresh === 'true'){
+						await server.refreshAllDevices();
+					}
+					allDevices = server.allDevices;
+				} else {
+					// we need this for when the server node is not deployed yet
+					allDevices = await getAllDevices(req.query.host + ':' + req.query.port);
+				}
+				
+				const rootDevice = allDevices.find(device => device.ref == req.query.deviceref);
 				if(rootDevice) {
-					const features = server.allDevices.filter(feature => rootDevice.associated_devices.includes(feature.ref));
+					const features = allDevices.filter(feature => rootDevice.associated_devices.includes(feature.ref));
 					res.status(200).send(features);
 				}else {
 					res.status(500).send("Unknown Device: " + req.query.deviceref);
 				}
-			} else {
-				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
+			} catch (err) {
+				res.status(500).send(err.message);
 			}
 		}
 	});
 	
 	// Get Events
-	RED.httpAdmin.get('/homeseer/events', function(req, res) {
-		//console.log("Http request: events ");
+	RED.httpAdmin.get('/homeseer/events', async function(req, res) {
+		console.log("Http request: events ");
 		if(!req.query.host) {
-			return res.status(500).send("Missing HS Server Host");
+			res.status(500).send("Missing HS Server Host");
 	    }
 		else if(!req.query.port) {
-			return res.status(500).send("Missing HS Server Port");
+			res.status(500).send("Missing HS Server Port");
 	    }
 		else
 		{
-			const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
-			
-			if(server){
-				if(req.query.forceRefresh === 'true'){
-					server.getAllEvents();
+			try{
+				let allEvents = [];
+				const server = servers.find(s => s.host == req.query.host && s.port == req.query.port);
+				
+				if(server){
+					if(req.query.forceRefresh === 'true'){
+						await server.refreshAllEvents();
+					}
+					allEvents = server.allEvents;
+				} else {
+					// we need this for when the server node is not deployed yet
+					allEvents = await getAllEvents(req.query.host + ':' + req.query.port);
 				}
-				res.status(200).send(server.allEvents);
-			} else {
-				res.status(404).send("Unknown HS Server: " + req.query.host + + ':' + req.query.port);
+				res.status(200).send(allEvents);
+			} catch (err) {
+				res.status(500).send(err.message);
 			}
 		}
 	});
