@@ -35,6 +35,14 @@ module.exports = function(RED) {
 						msg.payload = err;
 						node.send(msg);
 					});
+				} else if(typeof msg.payload.string != 'undefined') {
+					node.server.changeDeviceString(node.ref, msg.payload.string).then( data => {
+						msg.payload = data;
+						node.send(msg);
+					}).catch(err => {
+						msg.payload = err;
+						node.send(msg);
+					});
 				}
 			}
         });

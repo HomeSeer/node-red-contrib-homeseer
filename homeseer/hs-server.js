@@ -68,6 +68,22 @@ module.exports = function(RED) {
 				});
 			});
 		};
+      
+		node.changeDeviceString = function(deviceRef, string) {
+			console.log("changeDeviceString");
+			return new Promise( (resolve, reject) => {
+				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref='+ deviceRef +'&string=' + string, {}).then( (response) => {
+					if(response.data.Response == "ok"){
+						resolve(response.data.Response);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
+				}).catch( err => {
+					reject(err);
+				});
+			});
+		};
 		
 		node.runEvent = function(eventId) {
 			console.log("runEvent id=" + eventId);

@@ -187,6 +187,11 @@
 		<dt class="optional">msg.payload.status <span class="property-type">string</span></dt>
 		<dd>the status text of the control you want to use</dd>
 	</dl>
+    <p>To update a device string use <b>msg.payload.string</b></p>
+	<dl class="message-properties">
+		<dt class="optional">msg.payload.string <span class="property-type">string</span></dt>
+		<dd>the string text you want to use</dd>
+	</dl>
 	
 	<h3>Output</h3>
 	<p>Every time the device value or status changes in HomeSeer the node will send a message containing the new state of the device in <b>msg.payload</b></p>
