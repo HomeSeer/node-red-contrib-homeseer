@@ -36,7 +36,15 @@ module.exports = function(RED) {
 						node.send(msg);
 					});
 				} else if(typeof msg.payload.string != 'undefined') {
-					node.server.changeDeviceString(node.ref, msg.payload.string).then( data => {
+					node.server.setDeviceString(node.ref, msg.payload.string).then( data => {
+						msg.payload = data;
+						node.send(msg);
+					}).catch(err => {
+						msg.payload = err;
+						node.send(msg);
+					});
+				} else if(typeof msg.payload.statusvalue != 'undefined') {
+					node.server.setDeviceValue(node.ref, msg.payload.statusvalue).then( data => {
 						msg.payload = data;
 						node.send(msg);
 					}).catch(err => {
