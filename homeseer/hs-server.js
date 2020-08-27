@@ -7,10 +7,10 @@ module.exports = function(RED) {
 	var servers = [];
 	
 	function HsServerNode(config) {
-        var node = this;
+    var node = this;
 		console.log("HsServerNode");
-        console.log(config);
-        RED.nodes.createNode(node,config);
+    console.log(config);
+    RED.nodes.createNode(node,config);
 		node.host = config.host;
 		node.port = config.port;
 		node.allDevices = [];
@@ -18,8 +18,8 @@ module.exports = function(RED) {
 		node.eventEmitter = new Events.EventEmitter();
 		
 		node.getEndpoint = function() {
-            return node.host + ':' + node.port;
-        },
+      return node.host + ':' + node.port;
+    },
 		
 		node.refreshAllDevices = function(){
 			return getAllDevices(node.getEndpoint()).then( data => {
@@ -85,7 +85,7 @@ module.exports = function(RED) {
 			});
 		};
 		
-        node.setDeviceValue = function(deviceRef, value) {
+    node.setDeviceValue = function(deviceRef, value) {
 			console.log("setDeviceValue");
 			return new Promise( (resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref='+ deviceRef +'&value=' + value, {}).then( (response) => {
