@@ -7,10 +7,10 @@ module.exports = function(RED) {
 	var servers = [];
 	
 	function HsServerNode(config) {
-        var node = this;
+    var node = this;
 		console.log("HsServerNode");
-        console.log(config);
-        RED.nodes.createNode(node,config);
+    console.log(config);
+    RED.nodes.createNode(node,config);
 		node.host = config.host;
 		node.port = config.port;
 		node.allDevices = [];
@@ -18,8 +18,8 @@ module.exports = function(RED) {
 		node.eventEmitter = new Events.EventEmitter();
 		
 		node.getEndpoint = function() {
-            return node.host + ':' + node.port;
-        },
+      return node.host + ':' + node.port;
+    },
 		
 		node.refreshAllDevices = function(){
 			return getAllDevices(node.getEndpoint()).then( data => {
@@ -59,6 +59,38 @@ module.exports = function(RED) {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=controldevicebylabel&ref='+ deviceRef +'&label=' + label, {}).then( (response) => {
 					if(response.data.Devices && response.data.Devices.length == 1){
 						resolve(response.data.Devices[0]);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
+				}).catch( err => {
+					reject(err);
+				});
+			});
+		};
+      
+		node.setDeviceString = function(deviceRef, string) {
+			console.log("setDeviceString");
+			return new Promise( (resolve, reject) => {
+				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref='+ deviceRef +'&string=' + string, {}).then( (response) => {
+					if(response.data.Response == "ok"){
+						resolve(response.data.Response);
+					} else {
+						reject("Unexpected response");
+						console.log(response.data);
+					}
+				}).catch( err => {
+					reject(err);
+				});
+			});
+		};
+		
+    node.setDeviceValue = function(deviceRef, value) {
+			console.log("setDeviceValue");
+			return new Promise( (resolve, reject) => {
+				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref='+ deviceRef +'&value=' + value, {}).then( (response) => {
+					if(response.data.Response == "ok"){
+						resolve(response.data.Response);
 					} else {
 						reject("Unexpected response");
 						console.log(response.data);

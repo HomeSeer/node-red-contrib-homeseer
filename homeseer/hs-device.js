@@ -16,28 +16,50 @@ module.exports = function(RED) {
 			node.status({fill: "red", shape: "ring", text: "error while getting status"});
 		});
         
-        node.on('input', function(msg) {
+    node.on('input', function(msg) {
 			//console.log(node);
 			if(typeof msg.payload != 'undefined') {
-				if(typeof msg.payload.value != 'undefined') {
-					node.server.controlDeviceByValue(node.ref, msg.payload.value).then( data => {
-						msg.payload = data;
-						node.send(msg);
-					}).catch(err => {
-						msg.payload = err;
-						node.send(msg);
-					});
-				} else if(typeof msg.payload.status != 'undefined') {
-					node.server.controlDeviceByLabel(node.ref, msg.payload.status).then( data => {
-						msg.payload = data;
-						node.send(msg);
-					}).catch(err => {
-						msg.payload = err;
-						node.send(msg);
-					});
-				}
+        if(typeof msg.topic == 'string') msg.topic = msg.topic.toLowerCase();
+        if(!msg.topic || msg.topic == 'control') {
+          if(typeof msg.payload.value != 'undefined') {
+  					node.server.controlDeviceByValue(node.ref, msg.payload.value).then( data => {
+  						msg.payload = data;
+  						node.send(msg);
+  					}).catch(err => {
+  						msg.payload = err;
+  						node.send(msg);
+  					});
+  				} else if(typeof msg.payload.status != 'undefined') {
+  					node.server.controlDeviceByLabel(node.ref, msg.payload.status).then( data => {
+  						msg.payload = data;
+  						node.send(msg);
+  					}).catch(err => {
+  						msg.payload = err;
+  						node.send(msg);
+  					});
+          }
+        } else if(msg.topic == 'update') {
+          if(typeof msg.payload.value != 'undefined') {
+  					node.server.setDeviceValue(node.ref, msg.payload.value).then( data => {
+  						msg.payload = data;
+  						node.send(msg);
+  					}).catch(err => {
+  						msg.payload = err;
+  						node.send(msg);
+  					});
+          }
+          if(typeof msg.payload.status != 'undefined') {
+  					node.server.setDeviceString(node.ref, msg.payload.status).then( data => {
+  						msg.payload = data;
+  						node.send(msg);
+  					}).catch(err => {
+  						msg.payload = err;
+  						node.send(msg);
+  					});
+  				}
+        }
 			}
-        });
+    });
 		
 		node.updateListener = function(update){
 			console.log("device update:");
