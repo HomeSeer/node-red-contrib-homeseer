@@ -21,92 +21,114 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('hs-event',{
-        category: 'HomeSeer',
-        color: '#90c9ee',
-        defaults: {
-            name: {value:""},
-			event: {value:"", required: true},
-			server: {value:"", type:"hs-server", required: true},
-        },
-        inputs:1,
-        outputs:1,
-		align: 'right',
-        icon: "hs-device.png",
-		paletteLabel: function() {
-            return "HS Event";
-        },
-        label: function() {
-            return this.name||"HS Event";
-        },
-		
-		oneditprepare: function() {
-            var config = RED.nodes.node($('#node-input-server').val());
-			var node = this;
-			
-			loadEvents(node.event);
-			
-			function loadEvents(currentEvent, forceRefreshFromServer = false){
-                if (config && config.host && config.port) {
-                    $('#node-input-event').attr("disabled", "disabled")
-                    $('#node-input-event').append("<option value='' selected>Loading events...</option>")
-                    						
-					$.get('homeseer/events', { host: config.host, port: config.port, forceRefresh: forceRefreshFromServer } )
-					.done(function(data) {
-						//console.log(data);
-						const events = data;
-						
-						$('#node-input-event').empty();
-						if(events.length <= 0){
-							RED.notify("No events found", "error");
-						} else{
-							events.forEach(function(event)
-							{
-								$('#node-input-event').append('<option value="' + event.id + '">' + event.Group + ' - ' + event.Name + '</option>');
-							});
-							$('#node-input-event').removeAttr("disabled");
-							$('#node-input-event').val(currentEvent);
-						}                    
-					})
-					.fail(function()
-					{
-						RED.notify("Fail to get event list.", "error");
-					});	
-                } 
-			}
-			
-			function updateName(){
-                const eventName = $('#node-input-event option:selected').text();
-				if(eventName.length > 0){
-					$('#node-input-name').val(eventName);
-                }
-			}
-			
-			$('#node-input-eventrefresh').click( function() {
-                console.log('event refresh');
-				loadEvents(node.event, true);
-            });
-			
-			$('#node-input-server').on('change', function() {
-				console.log('server changed: ' + this.value);
-				
-				if(!config || this.value != config.id) {
-					config = RED.nodes.node(this.value);
-					if (this.value != '_ADD_') {
-						loadEvents(0);
-					} else {
-						$('#node-input-event').empty();
-					}
-				}
-            });
-			
-			$('#node-input-event').on('change', function() {
-				console.log('event changed: ' + this.value);
-				if(this.value) {
-					updateName();
-				}
-            });
-		},
+    RED.nodes.registerType('hs-event', {
+    	category: 'HomeSeer',
+    	color: '#90c9ee',
+    	defaults: {
+    		name: {
+    			value: ""
+    		},
+    		event: {
+    			value: "",
+    			required: true
+    		},
+    		server: {
+    			value: "",
+    			type: "hs-server",
+    			required: true
+    		},
+    	},
+    	inputs: 1,
+    	outputs: 1,
+    	align: 'right',
+    	icon: "hs-device.png",
+    	paletteLabel: function () {
+    		return "HS Event";
+    	},
+    	label: function () {
+    		return this.name || "HS Event";
+    	},
+
+    	oneditprepare: function () {
+    		var config = RED.nodes.node($('#node-input-server').val());
+    		var node = this;
+
+    		loadEvents(node.event);
+
+    		function loadEvents(currentEvent, forceRefreshFromServer = false) {
+    			if (config && config.host && config.port) {
+    				var username = "";
+    				var password = "";
+
+    				if (config.credentials) {
+    					username = config.credentials.username;
+    					password = config.credentials.password;
+    				}
+    				$('#node-input-event').attr("disabled", "disabled")
+    				$('#node-input-event').append("<option value='' selected>Loading events...</option>")
+
+    				//username and password passed here are only used by the runtime if the server node has not been deployed yet.
+    				//if the server node is already deployed, we use the credentials available from the runtime
+    				$.get('homeseer/events', {
+    					host: config.host,
+    					port: config.port,
+    					username: username,
+    					password: password,
+    					forceRefresh: forceRefreshFromServer
+    				})
+    				.done(function (data) {
+    					//console.log(data);
+    					const events = data;
+
+    					$('#node-input-event').empty();
+    					if (events.length <= 0) {
+    						RED.notify("No events found", "error");
+    					} else {
+    						events.forEach(function (event) {
+    							$('#node-input-event').append('<option value="' + event.id + '">' + event.Group + ' - ' + event.Name + '</option>');
+    						});
+    						$('#node-input-event').removeAttr("disabled");
+    						$('#node-input-event').val(currentEvent);
+    					}
+    				})
+    				.fail(function () {
+    					RED.notify("Fail to get event list.", "error");
+    				});
+    			}
+    		}
+
+    		function updateName() {
+    			const eventName = $('#node-input-event option:selected').text();
+    			if (eventName.length > 0) {
+    				$('#node-input-name').val(eventName);
+    			}
+    		}
+
+    		$('#node-input-eventrefresh').click(function () {
+    			console.log('event refresh');
+    			loadEvents(node.event, true);
+    		});
+
+    		$('#node-input-server').on('change', function () {
+    			console.log('server changed: ' + this.value);
+
+    			if (!config || this.value != config.id) {
+    				config = RED.nodes.node(this.value);
+    				if (this.value != '_ADD_') {
+    					loadEvents(0);
+    				} else {
+    					$('#node-input-event').empty();
+    				}
+    			}
+    		});
+
+    		$('#node-input-event').on('change', function () {
+    			console.log('event changed: ' + this.value);
+    			if (this.value) {
+    				updateName();
+    			}
+    		});
+    	},
     });
 </script>
 

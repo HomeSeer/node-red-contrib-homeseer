@@ -11,6 +11,14 @@
         <label for="node-config-input-port"><i class="fa fa-server"></i> Port</label>
         <input type="text" id="node-config-input-port">
     </div>
+	<div class="form-row">
+        <label for="node-config-input-username"><i class="fa fa-user"></i> Username</label>
+        <input type="text" id="node-config-input-username">
+    </div>
+	<div class="form-row">
+        <label for="node-config-input-password"><i class="fa fa-key"></i> Password</label>
+        <input type="password" id="node-config-input-password">
+    </div>
 </script>
 
 <script type="text/javascript">
@@ -21,6 +29,10 @@
             host: {value:"localhost",required:true},
             port: {value:80,required:true,validate:RED.validators.number()}
         },
+		credentials: {
+		    username: {type:"text"},
+			password: {type:"password"}
+		},
         label: function() {
             return (this.name? this.name : this.host+":"+this.port);
         }
@@ -38,4 +50,9 @@
 	
 	<h3>Port</h3>
     <p>Type in the web server port of your HomeSeer system. The default value (80) should be ok unless you changed the port in HomeSeer Setup > Network > Web Server Settings</p>
+	
+	<h3>Username and Password</h3>
+    <p>These fields are optional and only necessary if "No Password Required for local Login" is unchecked in HomeSeer Setup > Network > Web Server Settings</p>
+	
+	
 </script>

@@ -25,151 +25,189 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('hs-device',{
-        category: 'HomeSeer',
-        color: '#90c9ee',
-        defaults: {
-            name: {value:""},
-			device: {value:"", required: true},
-			server: {value:"", type:"hs-server", required: true},
-			feature: {value:"", required: false},
-        },
-        inputs:1,
-        outputs:1,
-		align: 'right',
-        icon: "hs-device.png",
-		paletteLabel: function() {
-            return "HS Device";
-        },
-        label: function() {
-            return this.name||"HS Device";
-        },
-		
-		oneditprepare: function() {
-            var config = RED.nodes.node($('#node-input-server').val());
-			var node = this;
-			
-			//console.log("oneditprepare");
-			//console.log(node.device);
-			
-			loadDevices(node.device, node.feature);
-			
-			function loadDevices(currentDevice, currentFeature, forceRefreshFromServer = false){
-                if (config && config.host && config.port) {
-                    $('#node-input-device').attr("disabled", "disabled")
-                    $('#node-input-device').append("<option value='' selected>Loading devices...</option>")
-                    						
-					$.get('homeseer/devices', { host: config.host, port: config.port, forceRefresh: forceRefreshFromServer } )
-					.done(function(data) {
-						//console.log(data);
-						//var devices = JSON.parse(data);
-						const devices = data;
-						
-						$('#node-input-device').empty();
-						if(devices.length <= 0){
-							RED.notify("No devices found", "error");
-						} else{
-							devices.forEach(function(device)
-							{
-								$('#node-input-device').append('<option value="' + device.ref + '">' + device.location2 + ' ' + device.location + ' ' + device.name + '</option>');
-							});
-							$('#node-input-device').removeAttr("disabled");
-							$('#node-input-device').val(currentDevice);
-							
-							loadFeatures(currentDevice, currentFeature);
-						}                    
-					})
-					.fail(function()
-					{
-						RED.notify("Fail to get device list.", "error");
-					});	
-                } 
-			}
-			
-			function loadFeatures(currentDevice, currentFeature, doUpdateName = false){
-                if (config && config.host && config.port && currentDevice) {
-                    $('#node-input-feature').attr("disabled", "disabled")
-                    $('#node-input-feature').append("<option value='' selected>Loading features...</option>")
-                    						
-					$.get('homeseer/features', { host: config.host, port: config.port, deviceref: currentDevice } )
-					.done(function(data) {
-						//console.log(data);
-						//var features = JSON.parse(data);
-						const features = data;
-						
-						$('#node-input-feature').empty();
-						if(features.length <= 0){
-							
-						} else{
-							features.forEach(function(feature)
-							{
-								$('#node-input-feature').append('<option value="' + feature.ref + '">' + feature.name + '</option>');
-							});
-							$('#node-input-feature').removeAttr("disabled");
-							$('#node-input-feature').val(currentFeature);
-							if(doUpdateName){
-								updateName();
-							}
-						}                    
-					})
-					.fail(function()
-					{
-						RED.notify("Fail to get feature list.", "error");
-					});	
-                } 
-			}
-			
-			function updateName(){
-                let deviceName = $('#node-input-device option:selected').text();
-				const featureName = $('#node-input-feature option:selected').text();
-                if(deviceName.length > 0){
-                    if(featureName.length > 0){
-						deviceName += ' ' + featureName;
-					}
-					$('#node-input-name').val(deviceName);
-                }
-			}
-			
-			$('#node-input-devicerefresh').click( function() {
-                console.log('device refresh');
-				loadDevices(node.device, node.feature, true);
-            });
-			
-			$('#node-input-server').on('change', function() {
-				console.log('server changed: ' + this.value);
-				
-				if(!config || this.value != config.id) {
-					config = RED.nodes.node(this.value);
-					if (this.value != '_ADD_') {
-						loadDevices(0, 0);
-					} else {
-						$('#node-input-device').empty();
-						$('#node-input-feature').empty();
-					}
-				}
-            });
-			
-			$('#node-input-device').on('change', function() {
-				console.log('device changed: ' + this.value);
-				if(this.value) {
-					loadFeatures(this.value, 0, true);
-				}
-            });
-			
-			$('#node-input-feature').on('change', function() {
-				console.log('feature changed: ' + this.value);
-				if(this.value) {
-					updateName();
-				}
-            });
-		},
-		
-		oneditsave: function() {
-			//we need this otherwise if you select a different device and no feature, 
-			//then this.feature will still bet set to the last feature value
-            this.device = $('#node-input-device').val() || 0;
-			this.feature = $('#node-input-feature').val() || 0;
-        }
+    RED.nodes.registerType('hs-device', {
+    	category: 'HomeSeer',
+    	color: '#90c9ee',
+    	defaults: {
+    		name: {
+    			value: ""
+    		},
+    		device: {
+    			value: "",
+    			required: true
+    		},
+    		server: {
+    			value: "",
+    			type: "hs-server",
+    			required: true
+    		},
+    		feature: {
+    			value: "",
+    			required: false
+    		},
+    	},
+    	inputs: 1,
+    	outputs: 1,
+    	align: 'right',
+    	icon: "hs-device.png",
+    	paletteLabel: function () {
+    		return "HS Device";
+    	},
+    	label: function () {
+    		return this.name || "HS Device";
+    	},
+
+    	oneditprepare: function () {
+    		var config = RED.nodes.node($('#node-input-server').val());
+    		var node = this;
+
+    		//console.log("oneditprepare");
+    		//console.log(config);
+    		//console.log(node.device);
+
+    		loadDevices(node.device, node.feature);
+
+    		function loadDevices(currentDevice, currentFeature, forceRefreshFromServer = false) {
+    			if (config && config.host && config.port) {
+					var username = "";
+    				var password = "";
+
+    				if (config.credentials) {
+    					username = config.credentials.username;
+    					password = config.credentials.password;
+    				}
+    				$('#node-input-device').attr("disabled", "disabled");
+    				$('#node-input-device').append("<option value='' selected>Loading devices...</option>");
+
+					//username and password passed here are only used by the runtime if the server node has not been deployed yet.
+					//if the server node is already deployed, we use the credentials available from the runtime
+    				$.get('homeseer/devices', {
+    					host: config.host,
+    					port: config.port,
+    					username: username,
+    					password: password,
+    					forceRefresh: forceRefreshFromServer
+    				})
+    				.done(function (data) {
+    					//console.log(data);
+    					//var devices = JSON.parse(data);
+    					const devices = data;
+
+    					$('#node-input-device').empty();
+    					if (devices.length <= 0) {
+    						RED.notify("No devices found", "error");
+    					} else {
+    						devices.forEach(function (device) {
+    							$('#node-input-device').append('<option value="' + device.ref + '">' + device.location2 + ' ' + device.location + ' ' + device.name + '</option>');
+    						});
+    						$('#node-input-device').removeAttr("disabled");
+    						$('#node-input-device').val(currentDevice);
+
+    						loadFeatures(currentDevice, currentFeature);
+    					}
+    				})
+    				.fail(function () {
+    					RED.notify("Fail to get device list.", "error");
+    				});
+    			}
+    		}
+
+    		function loadFeatures(currentDevice, currentFeature, doUpdateName = false) {
+    			if (config && config.host && config.port && currentDevice) {
+    				var username = "";
+    				var password = "";
+
+    				if (config.credentials) {
+    					username = config.credentials.username;
+    					password = config.credentials.password;
+    				}
+    				$('#node-input-feature').attr("disabled", "disabled");
+    				$('#node-input-feature').append("<option value='' selected>Loading features...</option>");
+
+					//username and password passed here are only used by the runtime if the server node has not been deployed yet.
+					//if the server node is already deployed, we use the credentials available from the runtime
+    				$.get('homeseer/features', {
+    					host: config.host,
+    					port: config.port,
+    					username: username,
+    					password: password,
+    					deviceref: currentDevice
+    				})
+    				.done(function (data) {
+    					//console.log(data);
+    					//var features = JSON.parse(data);
+    					const features = data;
+
+    					$('#node-input-feature').empty();
+    					if (features.length <= 0) {}
+    					else {
+    						features.forEach(function (feature) {
+    							$('#node-input-feature').append('<option value="' + feature.ref + '">' + feature.name + '</option>');
+    						});
+    						$('#node-input-feature').removeAttr("disabled");
+    						$('#node-input-feature').val(currentFeature);
+    						if (doUpdateName) {
+    							updateName();
+    						}
+    					}
+    				})
+    				.fail(function () {
+    					RED.notify("Fail to get feature list.", "error");
+    				});
+    			}
+    		}
+
+    		function updateName() {
+    			let deviceName = $('#node-input-device option:selected').text();
+    			const featureName = $('#node-input-feature option:selected').text();
+    			if (deviceName.length > 0) {
+    				if (featureName.length > 0) {
+    					deviceName += ' ' + featureName;
+    				}
+    				$('#node-input-name').val(deviceName);
+    			}
+    		}
+
+    		$('#node-input-devicerefresh').click(function () {
+    			console.log('device refresh');
+    			loadDevices(node.device, node.feature, true);
+    		});
+
+    		$('#node-input-server').on('change', function () {
+    			console.log('server changed: ' + this.value);
+
+    			if (!config || this.value != config.id) {
+    				config = RED.nodes.node(this.value);
+    				if (this.value != '_ADD_') {
+    					loadDevices(0, 0);
+    				} else {
+    					$('#node-input-device').empty();
+    					$('#node-input-feature').empty();
+    				}
+    			}
+    		});
+
+    		$('#node-input-device').on('change', function () {
+    			console.log('device changed: ' + this.value);
+    			if (this.value) {
+    				loadFeatures(this.value, 0, true);
+    			}
+    		});
+
+    		$('#node-input-feature').on('change', function () {
+    			console.log('feature changed: ' + this.value);
+    			if (this.value) {
+    				updateName();
+    			}
+    		});
+    	},
+
+    	oneditsave: function () {
+    		//we need this otherwise if you select a different device and no feature,
+    		//then this.feature will still bet set to the last feature value
+    		this.device = $('#node-input-device').val() || 0;
+    		this.feature = $('#node-input-feature').val() || 0;
+    	}
     });
 </script>
 
