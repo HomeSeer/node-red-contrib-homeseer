@@ -11,7 +11,7 @@ module.exports = function (RED) {
 
 		node.on('input', function (msg, send, done) {
 			//console.log(node);
-			if (msg.topic == 'run') {
+			if (!msg.topic || msg.topic == 'run') {
 				node.server.runEvent(node.eventid).then(data => {
 					msg.payload = data;
 					send(msg);
