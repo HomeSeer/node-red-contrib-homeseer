@@ -22,6 +22,9 @@
         <label for="node-input-feature"><i class="fa fa-lightbulb-o"></i> Feature</label>
         <select id="node-input-feature"></select>
     </div>
+	<div class="form-row">
+		<input type="checkbox" id="node-input-reportonstartup" style="display: inline-block; width: auto; vertical-align: top;">
+		<label for="node-input-reportonstartup" style="width: auto">Report state on startup</label>
 </script>
 
 <script type="text/javascript">
@@ -44,6 +47,9 @@
     		feature: {
     			value: "",
     			required: false
+    		},
+			reportonstartup: {
+    			value: false
     		},
     	},
     	inputs: 1,
@@ -217,21 +223,48 @@
 	<h3>Setup</h3>
     <p>Select a preconfigured HomeSeer server or add one. Select a Device from the list, then select a Feature for this device. If the feature you want to interact with is the root device itself, then leave the feature field blank. Hit the refresh button if you want to refresh the list of devices retrieved from your HomeSeer system. Optionnaly, change the name of the node.</p>
 	
-	<h3>Input</h3>
-	<p>To control a device use either <b>msg.payload.value</b> or <b>msg.payload.status</b></p>
+	<h3>Controlling a Device</h3>
+	<p>To control a device the node needs to receive on its input, a message with <b>msg.topic</b> set to <b>control</b> and either <b>msg.payload.value</b> property set to the control value to use, or the  <b>msg.payload.status</b> property set to the control text status to use. </p>
 	<dl class="message-properties">
+		<dt class="optional">msg.topic <span class="property-type">string</span></dt>
+		<dd><code>control</code></dd>
 		<dt class="optional">msg.payload.value <span class="property-type">double</span></dt>
 		<dd>the value of the control you want to use</dd>
 		<dt class="optional">msg.payload.status <span class="property-type">string</span></dt>
 		<dd>the status text of the control you want to use</dd>
 	</dl>
 	
-	<h3>Output</h3>
-	<p>Every time the device value or status changes in HomeSeer the node will send a message containing the new state of the device in <b>msg.payload</b></p>
+	<h3>Updating a Device's value and/or status</h3>
+	<p>To update a device's value and/or status, the node needs to receive on its input, a message with <b>msg.topic</b> set to <b>update</b> and either <b>msg.payload.value</b> property set to the new value, or the <b>msg.payload.status</b> property set to the new status, or both. </p>
 	<dl class="message-properties">
+		<dt>msg.topic <span class="property-type">string</span></dt>
+		<dd><code>update</code></dd>
 		<dt class="optional">msg.payload.value <span class="property-type">double</span></dt>
 		<dd>the new value of the device</dd>
 		<dt class="optional">msg.payload.status <span class="property-type">string</span></dt>
 		<dd>the new status text of the device</dd>
+	</dl>
+	
+	<h3>Receiving Device updates</h3>
+	<p>Every time the device value or status changes in HomeSeer the node will send a message containing the new state of the device in <b>msg.payload</b></p>
+	<dl class="message-properties">
+		<dt>msg.payload.value <span class="property-type">double</span></dt>
+		<dd>the new value of the device</dd>
+		<dt>msg.payload.status <span class="property-type">string</span></dt>
+		<dd>the new status text of the device</dd>
+	</dl>
+	
+	<h3>Forcing a Device update</h3>
+	<p>If the node receives a message with <b>msg.topic</b> set to <b>sync</b> it will get the current state of the device from HomeSeer and send it to its output in `msg.payload` even if no changes has occured since the last update.</p>
+	<dl class="message-properties">
+		<dt>msg.topic <span class="property-type">string</span></dt>
+		<dd><code>sync</code></dd>
+	</dl>
+	
+	<h3>Reporting Device current state</h3>
+	<p>If the node receives a message with <b>msg.topic</b> set to <b>report</b> it will send to its output the last known state of the device without querying HomeSeer. </p>
+	<dl class="message-properties">
+		<dt>msg.topic <span class="property-type">string</span></dt>
+		<dd><code>report</code></dd>
 	</dl>
 </script>

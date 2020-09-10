@@ -61,6 +61,12 @@ Every time the device value or status changes in HomeSeer the node will send to 
 }
 ```
 
+#### Forcing a Device update
+If the node receives a message with `msg.topic` set to `sync` it will get the current state of the device from HomeSeer and send it to its output in `msg.payload` even if no changes has occured since the last update.
+
+#### Reporting Device current state
+If the node receives a message with `msg.topic` set to `report` it will send to its output the last known state of the device without querying HomeSeer. 
+
 ### HS Event
 Node representing a HomeSeer Event. To run the event actions, this node needs to receive on its input, a message with the `msg.topic` property set to `run`
 
