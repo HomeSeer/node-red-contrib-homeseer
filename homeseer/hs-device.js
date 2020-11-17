@@ -2,8 +2,7 @@ module.exports = function (RED) {
 
 	function HsDeviceNode(config) {
 		var node = this;
-		console.log("HsDeviceNode");
-		console.log(config);
+		node.debug("HsDeviceNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
 		// Retrieve the server node
 		node.server = RED.nodes.getNode(config.server);
@@ -22,14 +21,11 @@ module.exports = function (RED) {
 				node.send(msg);
 			}
 		}).catch(err => {
-			console.log(err);
+			node.error(err);
 			node.updateStatus("error while getting status", true);
 		});
 
 		node.on('input', function (msg, send, done) {
-			//console.log(node);
-			//console.log(msg);
-
 			if (typeof msg.topic == 'string')
 				msg.topic = msg.topic.toLowerCase();
 			if ((!msg.topic || msg.topic == 'control') && typeof msg.payload != 'undefined') {
@@ -83,7 +79,6 @@ module.exports = function (RED) {
 					send(msg);
 					done();
 				}).catch(err => {
-					console.log(err);
 					node.updateStatus("error while getting status", true);
 					done(err);
 				});
@@ -107,8 +102,8 @@ module.exports = function (RED) {
 		}
 
 		node.updateListener = function (update) {
-			console.log("device update:");
-			console.log(update);
+			node.debug("device update:");
+			node.debug(JSON.stringify(update));
 			node.lastState = update;
 			node.updateStatus(update.status);
 			let msg = {
@@ -121,7 +116,7 @@ module.exports = function (RED) {
 		node.server.eventEmitter.addListener(node.ref.toString(), node.updateListener);
 
 		node.on('close', function () {
-			console.log("device close");
+			node.debug("device close");
 			node.server.eventEmitter.removeListener(node.ref.toString(), node.updateListener);
 		});
 

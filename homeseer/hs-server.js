@@ -8,8 +8,7 @@ module.exports = function (RED) {
 
 	function HsServerNode(config) {
 		var node = this;
-		console.log("HsServerNode Config = ");
-		console.log(config);
+		node.debug("HsServerNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
 		node.host = config.host;
 		node.port = config.port;
@@ -38,7 +37,7 @@ module.exports = function (RED) {
 			return getAllDevices(node.getEndpoint(), node.credentials.username, node.credentials.password).then(data => {
 				node.allDevices = data;
 			}).catch(err => {
-				node.error(msg);
+				node.error(err);
 			});
 		};
 
@@ -46,19 +45,19 @@ module.exports = function (RED) {
 			return getAllEvents(node.getEndpoint(), node.credentials.username, node.credentials.password).then(data => {
 				node.allEvents = data;
 			}).catch(err => {
-				node.error(msg);
+				node.error(err);
 			});
 		};
 
 		node.controlDeviceByValue = function (deviceRef, value) {
-			console.log("controlDeviceByValue");
+			node.debug("controlDeviceByValue");
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=controldevicebyvalue&ref=' + deviceRef + '&value=' + value, node.getAuth()).then((response) => {
 					if (response.data.Devices && response.data.Devices.length == 1) {
 						resolve(response.data.Devices[0]);
 					} else {
 						reject("Unexpected response");
-						console.log(response.data);
+						node.debug(JSON.stringify(response.data));
 					}
 				}).catch(err => {
 					reject(err);
@@ -67,14 +66,14 @@ module.exports = function (RED) {
 		};
 
 		node.controlDeviceByLabel = function (deviceRef, label) {
-			console.log("controlDeviceByLabel");
+			node.debug("controlDeviceByLabel");
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=controldevicebylabel&ref=' + deviceRef + '&label=' + label, node.getAuth()).then((response) => {
 					if (response.data.Devices && response.data.Devices.length == 1) {
 						resolve(response.data.Devices[0]);
 					} else {
 						reject("Unexpected response");
-						console.log(response.data);
+						node.debug(JSON.stringify(response.data));
 					}
 				}).catch(err => {
 					reject(err);
@@ -83,14 +82,14 @@ module.exports = function (RED) {
 		};
 
 		node.setDeviceString = function (deviceRef, string) {
-			console.log("setDeviceString");
+			node.debug("setDeviceString");
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref=' + deviceRef + '&string=' + string, node.getAuth()).then((response) => {
 					if (response.data.Response == "ok") {
 						resolve(response.data.Response);
 					} else {
 						reject("Unexpected response");
-						console.log(response.data);
+						node.debug(JSON.stringify(response.data));
 					}
 				}).catch(err => {
 					reject(err);
@@ -99,14 +98,14 @@ module.exports = function (RED) {
 		};
 
 		node.setDeviceValue = function (deviceRef, value) {
-			console.log("setDeviceValue");
+			node.debug("setDeviceValue");
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=setdevicestatus&ref=' + deviceRef + '&value=' + value, node.getAuth()).then((response) => {
 					if (response.data.Response == "ok") {
 						resolve(response.data.Response);
 					} else {
 						reject("Unexpected response");
-						console.log(response.data);
+						node.debug(JSON.stringify(response.data));
 					}
 				}).catch(err => {
 					reject(err);
@@ -115,7 +114,7 @@ module.exports = function (RED) {
 		};
 
 		node.runEvent = function (eventId) {
-			console.log("runEvent id=" + eventId);
+			node.debug("runEvent id=" + eventId);
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=runevent&id=' + eventId, node.getAuth()).then((response) => {
 					resolve(response.data);
@@ -126,14 +125,14 @@ module.exports = function (RED) {
 		};
 
 		node.getDeviceStatus = function (deviceRef) {
-			console.log("getDeviceStatus ref=" + deviceRef);
+			node.debug("getDeviceStatus ref=" + deviceRef);
 			return new Promise((resolve, reject) => {
 				Axios.get('http://' + node.getEndpoint() + '/json?request=getstatus&ref=' + deviceRef, node.getAuth()).then((response) => {
 					if (response.data.Devices && response.data.Devices.length == 1) {
 						resolve(response.data.Devices[0]);
 					} else {
 						reject("Unexpected response");
-						console.log(response.data);
+						node.debug(JSON.stringify(response.data));
 					}
 				}).catch(err => {
 					reject(err);
@@ -146,7 +145,7 @@ module.exports = function (RED) {
 		servers.push(node);
 
 		node.on('close', function () {
-			console.log("server close");
+			node.debug("server close");
 			//remove the server from the server array
 			servers = servers.filter(s => s.id != node.id);
 		});
@@ -176,7 +175,7 @@ module.exports = function (RED) {
 	};
 
 	function getAllDevices(endpoint, username, password) {
-		console.log("getAllDevices from " + endpoint);
+		RED.log.debug("getAllDevices from " + endpoint);
 		return new Promise((resolve, reject) => {
 			Axios.get('http://' + endpoint + '/json?request=getstatus', getAuth(username, password)).then((response) => {
 				resolve(response.data.Devices);
@@ -187,7 +186,7 @@ module.exports = function (RED) {
 	}
 
 	function getAllEvents(endpoint, username, password) {
-		console.log("getAllEvents from " + endpoint);
+		RED.log.debug("getAllEvents from " + endpoint);
 		return new Promise((resolve, reject) => {
 			Axios.get('http://' + endpoint + '/json?request=getevents', getAuth(username, password)).then((response) => {
 				resolve(response.data.Events);
@@ -199,7 +198,7 @@ module.exports = function (RED) {
 
 	// Get Root Devices
 	RED.httpAdmin.get('/homeseer/devices', async function (req, res) {
-		console.log("Http request: devices ");
+		RED.log.debug("Http request: devices ");
 		if (!req.query.host) {
 			res.status(500).send("Missing HS Server Host");
 		} else if (!req.query.port) {
@@ -228,7 +227,7 @@ module.exports = function (RED) {
 
 	// Get Features for one root device
 	RED.httpAdmin.get('/homeseer/features', async function (req, res) {
-		console.log("Http request: features ");
+		RED.log.debug("Http request: features ");
 		if (!req.query.host) {
 			res.status(500).send("Missing HS Server Host");
 		} else if (!req.query.port) {
@@ -265,7 +264,7 @@ module.exports = function (RED) {
 
 	// Get Events
 	RED.httpAdmin.get('/homeseer/events', async function (req, res) {
-		console.log("Http request: events ");
+		RED.log.debug("Http request: events ");
 		if (!req.query.host) {
 			res.status(500).send("Missing HS Server Host");
 		} else if (!req.query.port) {
@@ -293,8 +292,8 @@ module.exports = function (RED) {
 
 	// Receive updates from homeseer
 	RED.httpAdmin.post('/homeseer/webhook', function (req, res) {
-		//console.log("Http request: HomeSeer Webhook");
-		//console.log(req.body);
+		//RED.log.debug("Http request: HomeSeer Webhook");
+		//RED.log.debug(req.body);
 
 		var server;
 		if (servers.length == 1) {
@@ -314,8 +313,8 @@ module.exports = function (RED) {
 				}
 			}
 		} else {
-			//console.log("no server found");
-			//console.log(servers);
+			//RED.log.debug("no server found");
+			//RED.log.debug(servers);
 		}
 
 		res.status(200).send("OK");

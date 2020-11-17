@@ -2,15 +2,13 @@ module.exports = function (RED) {
 
 	function HsEventNode(config) {
 		var node = this;
-		console.log("HsEventNode");
-		console.log(config);
+		node.debug("HsEventNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
 		// Retrieve the server node
 		node.server = RED.nodes.getNode(config.server);
 		node.eventid = config.event;
 
 		node.on('input', function (msg, send, done) {
-			//console.log(node);
 			if (!msg.topic || msg.topic == 'run') {
 				node.server.runEvent(node.eventid).then(data => {
 					msg.payload = data;
