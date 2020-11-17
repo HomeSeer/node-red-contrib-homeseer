@@ -57,7 +57,7 @@ module.exports = function (RED) {
 					});
 				}
 				if (typeof msg.payload.status != 'undefined') {
-					node.server.setDeviceString(node.ref, msg.payload.status).then(data => {
+					node.server.setDeviceString(node.ref, encodeURIComponent(msg.payload.status)).then(data => {
 						msg.payload = data;
 						send(msg);
 						done();
