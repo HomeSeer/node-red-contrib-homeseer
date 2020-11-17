@@ -15,6 +15,7 @@ module.exports = function (RED) {
 			node.updateStatus(data.status);
 			if (node.reportonstartup) {
 				let msg = {
+					nodeName: node.name,
 					topic: "",
 					payload: node.lastState
 				};
@@ -31,6 +32,7 @@ module.exports = function (RED) {
 			if ((!msg.topic || msg.topic == 'control') && typeof msg.payload != 'undefined') {
 				if (typeof msg.payload.value != 'undefined') {
 					node.server.controlDeviceByValue(node.ref, msg.payload.value).then(data => {
+						msg.nodeName = node.name;
 						msg.payload = data;
 						send(msg);
 						done();
@@ -39,6 +41,7 @@ module.exports = function (RED) {
 					});
 				} else if (typeof msg.payload.status != 'undefined') {
 					node.server.controlDeviceByLabel(node.ref, msg.payload.status).then(data => {
+						msg.nodeName = node.name;
 						msg.payload = data;
 						send(msg);
 						done();
@@ -49,6 +52,7 @@ module.exports = function (RED) {
 			} else if (msg.topic == 'update' && typeof msg.payload != 'undefined') {
 				if (typeof msg.payload.value != 'undefined') {
 					node.server.setDeviceValue(node.ref, msg.payload.value).then(data => {
+						msg.nodeName = node.name;
 						msg.payload = data;
 						send(msg);
 						done();
@@ -58,6 +62,7 @@ module.exports = function (RED) {
 				}
 				if (typeof msg.payload.status != 'undefined') {
 					node.server.setDeviceString(node.ref, encodeURIComponent(msg.payload.status)).then(data => {
+						msg.nodeName = node.name;
 						msg.payload = data;
 						send(msg);
 						done();
@@ -67,6 +72,7 @@ module.exports = function (RED) {
 				}
 			} else if (msg.topic == 'report') {
 				if (node.lastState) {
+					msg.nodeName = node.name;
 					msg.payload = node.lastState;
 					send(msg);
 				}
@@ -75,6 +81,7 @@ module.exports = function (RED) {
 				node.server.getDeviceStatus(node.ref).then(data => {
 					node.lastState = data;
 					node.updateStatus(data.status);
+					msg.nodeName = node.name;
 					msg.payload = node.lastState;
 					send(msg);
 					done();
@@ -107,6 +114,7 @@ module.exports = function (RED) {
 			node.lastState = update;
 			node.updateStatus(update.status);
 			let msg = {
+				nodeName: node.name,
 				topic: "",
 				payload: update
 			};
