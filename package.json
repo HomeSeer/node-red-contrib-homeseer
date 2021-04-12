@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-homeseer",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "HomeSeer nodes to control HomeSeer devices and events from Node-RED",
   "homepage": "https://github.com/HomeSeer/node-red-contrib-homeseer",
   "repository": {
@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "promise": "^8.0.3",
-    "axios": "*"
+    "axios": "^0.21.1",
+    "promise": "^8.0.3"
   }
 }
