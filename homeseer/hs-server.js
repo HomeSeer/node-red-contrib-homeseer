@@ -8,8 +8,8 @@ module.exports = function (RED) {
 
 	function HsServerNode(config) {
 		var node = this;
-		node.debug("HsServerNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
+		node.debug("HsServerNode: " + JSON.stringify(config));
 		node.host = config.host;
 		node.port = config.port;
 		node.allDevices = [];

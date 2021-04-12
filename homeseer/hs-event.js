@@ -2,8 +2,8 @@ module.exports = function (RED) {
 
 	function HsEventNode(config) {
 		var node = this;
-		node.debug("HsEventNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
+		node.debug("HsEventNode: " + JSON.stringify(config));
 		// Retrieve the server node
 		node.server = RED.nodes.getNode(config.server);
 		node.eventid = config.event;

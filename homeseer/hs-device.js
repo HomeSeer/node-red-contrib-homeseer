@@ -2,8 +2,8 @@ module.exports = function (RED) {
 
 	function HsDeviceNode(config) {
 		var node = this;
-		node.debug("HsDeviceNode: " + JSON.stringify(config));
 		RED.nodes.createNode(node, config);
+		node.debug("HsDeviceNode: " + JSON.stringify(config));
 		// Retrieve the server node
 		node.server = RED.nodes.getNode(config.server);
 		node.ref = (config.feature > 0 ? config.feature : config.device);
